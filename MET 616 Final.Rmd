@@ -1,0 +1,53 @@
+---
+title: "MET 616 Final"
+author: "JingjianGao"
+date: "2023-12-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Simulation
+
+```{r}
+library(dplyr)
+library(ggplot2)
+set.seed(616)
+
+bus_data <- read.csv("updated_bus_data.csv",header=TRUE)
+
+bus_data <- bus_data %>%
+  mutate(
+    HourlyDemand = `Hourly.Demand`,
+    BusesRequiredMax = `Buses.Required.maximum`,
+    BusesRequiredMin = `Buses.Required.minmum`
+  )
+
+# Bus frequencies Simulation based on demand
+simulate_bus_frequencies <- function(data, threshold) {
+  data %>%
+    mutate(
+      BusFrequency = ifelse(HourlyDemand > threshold, BusesRequiredMax, BusesRequiredMin)
+    )
+}
+
+threshold = 200 # Threshold for hourly demand
+simulation_result <- simulate_bus_frequencies(bus_data, threshold)
+
+# Plot
+ggplot(simulation_result, aes(x = `Bus.Stop.Name`, y = BusFrequency)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+  labs(
+    title = "Bus Frequency Simulation",
+    x = "Bus Stop",
+    y = "Number of Buses Required"
+    
+)
+
+
+
+
+```

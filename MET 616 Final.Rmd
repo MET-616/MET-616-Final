@@ -48,6 +48,69 @@ ggplot(simulation_result, aes(x = `Bus.Stop.Name`, y = BusFrequency)) +
 )
 
 
+```
+
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+bus_data <- read.csv("updated_bus_data.csv", header = TRUE)
+
+# Parameters
+operational_hours <- 6:22  
+peak_hours <- c(7, 8, 17, 18)  
+headway_peak <- c(3, 5)    # 3-5 minutes during peak hours
+headway_non_peak <- c(7, 10)  # 7-10 minutes during non-peak hours
+
+# Simulating hourly demand
+simulate_demand <- function(hour, is_weekday) {
+  mean_demand <- if (hour %in% peak_hours && is_weekday) {
+    650  # mean demand value
+  } else {
+    400  
+  }
+  sd_demand <- 0.20 * mean_demand
+  demand <- rnorm(1, mean_demand, sd_demand)
+  demand <- ifelse(demand < 0, 0, demand) # Ensure demand is not negative
+  return(demand)
+}
+
+# Function to determine bus requirements
+calculate_buses_needed <- function(hour, demand) {
+  headway <- if (hour %in% peak_hours) sample(headway_peak, 1) else sample(headway_non_peak, 1)
+  bus_capacity <- 51  # Example
+  buses_needed <- ceiling(demand / (bus_capacity * headway))
+  return(buses_needed)
+}
+
+# Monte Carlo simulation
+set.seed(123) 
+results <- data.frame()
+for (day in 1:7) { 
+  is_weekday <- day <= 5
+  for (hour in operational_hours) {
+    demand <- simulate_demand(hour, is_weekday)
+    buses_needed <- calculate_buses_needed(hour, demand)
+    
+    results <- rbind(results, cbind(Day = day, Hour = hour, Demand = demand, BusesNeeded = buses_needed))
+  }
+}
+
+
+head(results)
+
+ggplot(results, aes(x = Hour, y = BusesNeeded, group = Day, color = as.factor(Day))) +
+  geom_line() +
+  labs(title = "Daily Variation of Bus Demand",
+       x = "Hour of the Day",
+       y = "Number of Buses Needed",
+       color = "Day of the Week") +
+  theme_minimal()
+
+
+
+
 
 
 ```
